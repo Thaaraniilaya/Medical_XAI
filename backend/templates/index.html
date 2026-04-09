@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medi-Assist Pro Dashboard (Flask)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Small fix for Flask template pathing */
+        body { padding-top: 50px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1 class="logo">MEDI-ASSIST PRO <i class="fas fa-notes-medical"></i></h1>
+            <div class="header-icons">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-user-circle"></i>
+                <i class="fas fa-bars"></i>
+            </div>
+        </header>
+
+        <main class="main-grid">
+            
+            <div class="card virtual-assistant">
+                <h3>VIRTUAL ASSISTANT</h3>
+                <div id="chat-history" style="height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                    <div class="assistant-chat">
+                        <p class="chat-bubble" style="background-color: #00bcd4; color: #1e3a53; border-radius: 15px 15px 15px 0;">Hello, what can I help you with today?</p>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="chat-input" placeholder="Ask a medical question or task...">
+                    <button id="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <div class="card report-checker">
+                <h3>REPORT CHECKER</h3>
+                <p id="analysis-status" class="status">Ready for document upload...</p>
+                <input type="file" id="report-file-input" style="display: none;">
+                <button class="upload-btn" id="trigger-upload"><i class="fas fa-upload"></i> Upload Document +</button>
+                <button id="analyze-btn" class="call-btn" style="width: 100%; margin-top: 10px; display: none;">Analyze Report</button>
+                <div id="analysis-results" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="card to-do-list list-main">
+                <h3>TO-DO LIST</h3>
+                <ul class="task-list">
+                    <li><input type="checkbox" checked> Refill Prescriptions</li>
+                    <li><input type="checkbox"> Schedule Dental Check-up</li>
+                    <li><input type="checkbox"> Research Nutritionist</li>
+                </ul>
+            </div>
+
+            <div class="card timer-card">
+                <h3>WORKOUT/HYDRATION TIMER</h3>
+                <div class="timer-stats">
+                    <div class="stat-circle hydration">
+                        <span class="value">2.5L/3.0L</span>
+                        <span class="label">Hydration Goal</span>
+                    </div>
+                    <div class="stat-circle workout">
+                        <span class="value">30 mins</span>
+                        <span class="label">Daily Running</span>
+                    </div>
+                </div>
+                <button class="quick-log-btn"><i class="fas fa-running"></i> Log Workout</button>
+            </div>
+
+            <div class="card task-planner">
+                <h3>TASK PLANNER</h3>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">9:00 AM</span>
+                        <span class="task-desc">Teleconsult Dr. Lee</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">12:30 PM</span>
+                        <span class="task-desc">Physio Session</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card caretaker-call">
+                <h3>CARETAKER CALL</h3>
+                <p class="note">Contact David and inform him of procedure details.</p>
+                <button class="call-btn"><i class="fas fa-phone-alt"></i> Call Caretaker Sarah</button>
+            </div>
+
+            <div class="card to-do-list list-secondary">
+                <h3>HEALTH STATUS</h3>
+                <p>Metrics tracked here...</p>
+            </div>
+            
+        </main>
+
+        <footer class="footer-nav">
+            <a href="#" class="nav-item active"><i class="fas fa-home"></i> Home</a>
+            <a href="#" class="nav-item"><i class="fas fa-calendar-alt"></i> Tasks</a>
+            <a href="#" class="nav-item"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="#" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+            <button class="emergency-btn"><i class="fas fa-ambulance"></i> Emergency</button>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatHistory = document.getElementById('chat-history');
+            const chatInput = document.getElementById('chat-input');
+            const sendChatBtn = document.getElementById('send-chat-btn');
+            const fileInput = document.getElementById('report-file-input');
+            const triggerUploadBtn = document.getElementById('trigger-upload');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const analysisStatus = document.getElementById('analysis-status');
+            const analysisResults = document.getElementById('analysis-results');
+
+            const API_URL = 'http://127.0.0.1:5000/api/'; // Flask default URL
+
+            // ------------------ HELPER FUNCTION ------------------
+            function appendMessage(sender, text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'assistant-chat';
+                
+                const bubble = document.createElement('p');
+                bubble.className = 'chat-bubble';
+                bubble.textContent = text;
+
+                // Simple styling based on sender
+                if (sender === 'user') {
+                    messageDiv.style.justifyContent = 'flex-end';
+                    bubble.style.borderRadius = '15px 15px 0 15px';
+                    bubble.style.backgroundColor = '#e0f2f1'; // Light background for user
+                    bubble.style.color = '#1e3a53';
+                } else {
+                    messageDiv.style.justifyContent = 'flex-start';
+                    bubble.style.backgroundColor = '#00bcd4'; // Accent blue for assistant
+                    bubble.style.color = '#1e3a53';
+                    bubble.style.borderRadius = '15px 15px 15px 0';
+                }
+
+                messageDiv.appendChild(bubble);
+                chatHistory.appendChild(messageDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll
+            }
+
+            // ------------------ CHAT LOGIC ------------------
+            async function handleChat() {
+                const prompt = chatInput.value.trim();
+                if (!prompt) return;
+
+                appendMessage('user', prompt);
+                chatInput.value = '';
+
+                try {
+                    const response = await fetch(API_URL + 'chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: prompt })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        appendMessage('assistant', data.reply);
+                    } else {
+                        appendMessage('assistant', 'Error: ' + data.error);
+                    }
+                } catch (error) {
+                    appendMessage('assistant', 'Network Error: Could not connect to Flask server.');
+                }
+            }
+
+            sendChatBtn.addEventListener('click', handleChat);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleChat();
+            });
+
+
+            // ------------------ ANALYSIS LOGIC ------------------
+            let uploadedFileContent = null;
+
+            // Trigger hidden file input when button is clicked
+            triggerUploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // Handle file selection
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Simple check for TXT, we need advanced parsing for PDF/Image
+                if (file.type !== 'text/plain') {
+                    analysisStatus.textContent = `File uploaded: ${file.name}. Only TXT is processed for now.`;
+                    uploadedFileContent = null;
+                    analyzeBtn.style.display = 'none';
+                    return;
+                }
+
+                analysisStatus.textContent = `File uploaded: ${file.name}. Reading content...`;
+                analyzeBtn.style.display = 'block';
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedFileContent = e.target.result;
+                    analysisStatus.textContent = `File ready for analysis.`;
+                };
+                reader.readAsText(file);
+            });
+
+            // Handle Analysis Button Click
+            analyzeBtn.addEventListener('click', async () => {
+                if (!uploadedFileContent) {
+                    analysisStatus.textContent = 'Please upload a valid TXT file first.';
+                    return;
+                }
+
+                analysisStatus.textContent = 'Analyzing report with BioGPT...';
+                analysisResults.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                
+                try {
+                    const response = await fetch(API_URL + 'analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ report_text: uploadedFileContent })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Display the full summary returned by your model
+                        analysisResults.innerHTML = `
+                            <p style="color: #4caf50;">Analysis Complete!</p>
+                            <p style="white-space: pre-wrap; color: #e0f2f1; font-size: 0.9rem;">${data.summary}</p>
+                        `;
+                    } else {
+                        analysisResults.innerHTML = `<p style="color: #f44336;">Analysis Failed: ${data.error}</p>`;
+                    }
+                    analysisStatus.textContent = 'Results Displayed.';
+
+                } catch (error) {
+                    analysisResults.innerHTML = '<p style="color: #f44336;">Network Error: Could not connect to Flask API.</p>';
+                    analysisStatus.textContent = 'Server connection failed.';
+                }
+            });
+            
+        });
+    </script>
+</body>
+</html>

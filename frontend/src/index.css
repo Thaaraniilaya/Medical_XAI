@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+  }
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl dark:bg-slate-900/80 dark:border-slate-700/50;
+}
+
+.glass-card {
+  @apply bg-white/60 backdrop-blur-xl border border-white/60 shadow-lg rounded-2xl transition-all duration-300 hover:shadow-xl hover:bg-white/70 hover:-translate-y-1 dark:bg-slate-800/60 dark:border-slate-700/50 dark:hover:bg-slate-800/80;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes gradient-xy {
+
+  0%,
+  100% {
+    background-size: 400% 400%;
+    background-position: 0% 0%;
+  }
+
+  25% {
+    background-position: 100% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 15s ease infinite;
+}
+
+/* Dynamic Mesh Background */
+.mesh-gradient-bg {
+  background-color: #f0f9ff;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 0.15) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.15) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.15) 0, transparent 50%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -10;
+}
+
+.animated-mesh {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.1), rgba(124, 58, 237, 0.05), transparent 60%);
+  animation: pulse-mesh 8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-mesh {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Base Dark Mode */
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+.dark p,
+.dark span,
+.dark li,
+.dark div:not(.glass-card):not(.glass-panel) {
+  @apply text-slate-300;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500 {
+  @apply text-slate-400;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-800,
+.dark .text-slate-900 {
+  @apply text-slate-100;
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4 {
+  @apply text-white;
+}
+
+.dark .glass-panel {
+  @apply shadow-slate-900/20 text-white;
+}
+
+/* Floating Animation for Curiosity */
+.floating-element {
+  animation: float-random 20s infinite linear;
+}
+
+@keyframes float-random {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(10px, -15px) rotate(5deg);
+  }
+
+  50% {
+    transform: translate(-5px, 10px) rotate(-5deg);
+  }
+
+  75% {
+    transform: translate(-15px, -5px) rotate(3deg);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
