@@ -20,20 +20,7 @@ from medical_assisstant import orchestrate_request
 # ----------------------------------------------------------------------
 # 1. FLASK SETUP
 # ----------------------------------------------------------------------
-# Point to the React build folder
-import os
-backend_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(backend_dir)
-frontend_dist = os.path.abspath(os.path.join(project_root, 'frontend', 'dist'))
-
-print(f"DEBUG: Backend Dir: {backend_dir}")
-print(f"DEBUG: Frontend Dist Path: {frontend_dist}")
-print(f"DEBUG: Frontend Dist Exists: {os.path.exists(frontend_dist)}")
-
-app = Flask(__name__, 
-            static_folder=frontend_dist,
-            static_url_path='', # Empty string means serve from root
-            template_folder=frontend_dist)
+app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app) 
 
 # ----------------------------------------------------------------------
@@ -42,7 +29,9 @@ CORS(app)
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "healthy", "frontend_dist": frontend_dist, "exists": os.path.exists(frontend_dist)})
+    import os
+    dist_exists = os.path.exists(app.static_folder) if app.static_folder else False
+    return jsonify({"status": "healthy", "static_folder": app.static_folder, "exists": dist_exists})
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_report():
@@ -161,17 +150,13 @@ def chat_assistant():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    # Try to serve requested path from static folder
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        print(f"DEBUG: Serving static file: {path}")
-        return send_from_directory(app.static_folder, path)
-    
-    # Fallback to index.html for SPA routing
-    print(f"DEBUG: Serving index.html for path: {path}")
-    return send_from_directory(app.static_folder, 'index.html')
+@app.route("/")
+def serve():
+    return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/<path:path>")
+def catch_all(path):
+    return send_from_directory(app.static_folder, "index.html")
 
 # ----------------------------------------------------------------------
 # 3. SERVER START
